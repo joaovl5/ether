@@ -1,0 +1,7 @@
+.direnv
+/target
+/result
+/result-lib
+/.prek.toml
+/.bacon-locations
+/.bacon-socket
