@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, StripPrefixError};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HashAlgo {
@@ -24,6 +24,12 @@ impl From<std::io::Error> for HashError {
   }
 }
 
+impl From<StripPrefixError> for HashError {
+  fn from(_value : StripPrefixError) -> Self {
+    Self::BadPath
+  }
+}
+
 impl HashAlgo {
   pub fn make_path(&self, path : &Path) -> Result<String, HashError> {
     match self {
@@ -32,9 +38,9 @@ impl HashAlgo {
   }
 
   fn get_file_name<'a>(&self, path : &'a Path) -> Result<&'a str, HashError> {
-    let Some(file_name) = path.file_name().and_then(|x| x.to_str()) else {
-      return Err(HashError::BadPath);
-    };
+    let file_name = path.file_name()
+                        .and_then(|x| x.to_str())
+                        .ok_or(HashError::BadPath)?;
     Ok(file_name)
   }
 
@@ -53,10 +59,13 @@ impl HashAlgo {
 
     if path.is_dir() {
       hasher.update(format!("<dir name='{}'>", file_name).as_bytes());
-      let dir_reader = path.read_dir()?;
-      for entry in dir_reader {
-        let subpath = entry?.path().as_path();
-        self.blake3_handle_hash(path, hasher)?;
+      let mut dirs = path.read_dir()?
+                         .map(|x| x.map(|entry| entry.path()))
+                         .collect::<std::io::Result<Vec<_>>>()?;
+      dirs.sort();
+
+      for subpath in dirs {
+        self.blake3_handle_hash(&subpath, hasher)?;
       }
       hasher.update(b"</dir>");
     } else {

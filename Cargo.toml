@@ -7,10 +7,50 @@
   opt-level   = 1
   incremental = true
 
-  [profile.dev.packages."*"]
-    opt-level = 3
+  # [profile.dev.packages."*"]
+  #   opt-level = 3
 
 [dependencies]
-  serde  = { version = "1.0", features = ["derive"] }
-  toml   = { version = "1.1.8" }
-  blake3 = { version = "1.8.7", features = ["mmap", "rayon"] }
+  serde = { version = "1.0", features = [
+    "derive",
+  ] }
+  blake3 = { version = "1.8.7", features = [
+    "mmap",
+    "rayon",
+  ] }
+  clap = { version = "4.6.7", features = [
+    "derive",
+    "cargo",
+    "env",
+    "unicode",
+    "wrap_help",
+    "string",
+  ] }
+  human-panic = { version = "2.0.8" }
+  tracing = { version = "0.1" }
+  tracing-subscriber = { version = "0.3", features = [
+    "tracing-log",
+    "time",
+    "local-time",
+    "env-filter",
+  ] }
+  time = { version = "0.3.55", features = [
+    "formatting",
+    "local-offset",
+    "macros",
+  ] }
+  sea-orm = { version = "2.0.0", features = [
+    "sqlx-sqlite",
+    "runtime-tokio",
+    "macros",
+    "with-time",
+    "with-json",
+    "schema-sync",
+    "entity-registry",
+  ] }
+  tokio = { version = "1.54.1", features = [
+    # can tweak later to make fine-grained
+    "full",
+    "tracing",
+    "io-uring",
+  ] }

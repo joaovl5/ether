@@ -1,7 +1,7 @@
-use std::env::temp_dir;
 use std::path::{Path, PathBuf};
+use std::{fs, io};
 
-use super::{Drv, StoreId, StoreObject};
+use super::Drv;
 use crate::core::hash::{HashAlgo, HashError};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -13,8 +13,16 @@ pub struct Store {
 #[derive(Debug)]
 pub struct StoreObjectData {}
 
+#[derive(Debug)]
 pub enum StoreError {
   Hash(HashError),
+  IO(io::Error),
+}
+
+impl From<io::Error> for StoreError {
+  fn from(value : io::Error) -> Self {
+    Self::IO(value)
+  }
 }
 
 impl From<HashError> for StoreError {
@@ -24,17 +32,52 @@ impl From<HashError> for StoreError {
 }
 
 impl Store {
-  pub fn new() -> Self {
-    Store { root_path : temp_dir(),
+  pub fn new(dir : PathBuf) -> Self {
+    Store { root_path : dir,
             hash : HashAlgo::BLAKE3 }
   }
 
-  pub fn copy_path(&mut self, path : &Path) -> Result<(), StoreError> {
+  pub fn copy_path(&mut self, path : &Path) -> Result<PathBuf, StoreError> {
     let contents_hash = self.hash.make_path(path)?;
-    // let x = (self.root_path.join(obj_id_str));
-
-    todo!()
+    let store_path = self.make_store_path(contents_hash)?;
+    self.copy_into(path, &store_path)?;
+    Ok(store_path)
   }
 
-  pub fn build_drv(&mut self, drv : &Drv) {}
+  fn copy_into(&mut self, from : &Path, to : &Path) -> Result<(), StoreError> {
+    let name = from.file_name()
+                        .and_then(|x| x.to_str())
+                        .ok_or_else(|| {
+                          const MSG : &str = "source has no valid name";
+                          io::Error::new(io::ErrorKind::InvalidInput, MSG)
+                        })?;
+    let metadata = fs::symlink_metadata(from)?;
+    if !metadata.is_file() && !metadata.is_dir() {
+      const MSG : &str = "source wasn't a regular file or directory";
+      let io_err = io::Error::new(io::ErrorKind::InvalidInput, MSG);
+      return Err(StoreError::IO(io_err));
+    }
+    fs::create_dir_all(to)?;
+    let destination = to.join(name);
+    if metadata.is_dir() {
+      fs::create_dir_all(&destination)?;
+      for entry in fs::read_dir(from)? {
+        self.copy_into(&entry?.path(), &destination)?;
+      }
+    } else {
+      fs::copy(from, &destination)?;
+    }
+
+    Ok(())
+  }
+
+  fn make_store_path(&mut self,
+                     contents_hash : String)
+                     -> Result<PathBuf, StoreError> {
+    let out = self.root_path.join(contents_hash);
+    fs::create_dir_all(out.clone())?;
+    Ok(out)
+  }
+
+  pub fn build_drv(&mut self, _drv : &Drv) {}
 }
