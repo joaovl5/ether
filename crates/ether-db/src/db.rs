@@ -1,7 +1,6 @@
 use std::error::Error;
 
-use ether_common as cmm;
-use ether_common::{EtherError, MetadataBackend, ResOpt};
+use ether_common::{self as cmm, EtherError, MetadataBackend, Res, ResOpt};
 use toasty::{Db, models};
 
 use crate::models::StoreObject;
@@ -41,6 +40,10 @@ impl EtherDatabase {
 }
 
 impl MetadataBackend for EtherDatabase {
+  async fn mk_obj(&mut self, obj : ether_common::StoreObject) -> Res<()> {
+    todo!()
+  }
+
   async fn get_obj_by_id(&mut self,
                          id : ether_common::StoreID)
                          -> ResOpt<ether_common::StoreObject> {

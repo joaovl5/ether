@@ -1,18 +1,20 @@
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
-use ether_common::EtherError;
+use ether_common::{EtherError, MetadataBackend};
 use ether_db::EtherDatabase;
 
 use super::Drv;
 use crate::hash::{HashAlgo, HashError};
 
 #[derive(Debug)]
-pub struct Store {
+pub struct Store<Backend = EtherDatabase>
+  where Backend : MetadataBackend,
+{
   pub root_path : PathBuf,
   pub hash : HashAlgo,
 
-  db : EtherDatabase,
+  pub backend : Backend,
 }
 
 #[derive(Debug)]
@@ -37,12 +39,12 @@ impl From<HashError> for StoreError {
 }
 
 impl Store {
-  pub async fn new(dir : PathBuf) -> Result<Self, EtherError> {
-    let db = EtherDatabase::new().await?;
+  pub async fn new(dir : PathBuf) -> Result<Store<EtherDatabase>, EtherError> {
     fs::create_dir_all(&dir)?;
+    let backend = EtherDatabase::new().await?;
     Ok(Store { root_path : dir,
                hash : HashAlgo::BLAKE3,
-               db })
+               backend })
   }
 
   pub fn copy_path(&mut self, path : &Path) -> Result<PathBuf, StoreError> {
