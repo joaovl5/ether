@@ -1,6 +1,7 @@
-use toasty::{Deferred, Model};
+use ether_common::Res;
+use toasty::{Db, Deferred, Model};
 
-use crate::utils::{StoreHash, StoreID};
+use crate::utils::{IntoPrimitive, StoreHash, StoreID};
 
 #[derive(Debug, Model)]
 pub struct StoreObject {
@@ -8,6 +9,7 @@ pub struct StoreObject {
   #[auto]
   pub id : StoreID,
 
+  #[index]
   pub hash : StoreHash,
 
   #[index]
@@ -19,17 +21,23 @@ pub struct StoreObject {
   pub children : Deferred<Vec<StoreObject>>,
 }
 
-type P = ether_common::StoreObject;
-
-impl P {
-  fn from(value : StoreObject) -> Self {
+impl IntoPrimitive for StoreObject {
+  type P = ether_common::StoreObject;
+  async fn into_primitive(self, db : &mut Db) -> Res<Self::P> {
     // let obj = cmm::StoreObject { id : db_obj.id.into(),
     //                              hash : db_obj.hash.into(),
     //                              comes_from : None,
     //                              children : Vec::new() };
-    P { id : value.id.into(),
-        hash : value.hash.into(),
-        comes_from : value.comes_from_id.map(|x| x.into()),
-        children : value.children }
+    let children = self.children()
+                       .exec(db)
+                       .await?
+                       .iter()
+                       .map(|x| x.id.clone().into())
+                       .collect();
+    let comes_from = self.comes_from_id.clone().map(|x| x.into());
+    Ok(Self::P { id : self.id.clone().into(),
+                 hash : self.hash.clone().into(),
+                 comes_from,
+                 children })
   }
 }

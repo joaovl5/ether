@@ -1,9 +1,11 @@
+use std::error::Error;
+
 use ether_common as cmm;
 use ether_common::{EtherError, MetadataBackend, ResOpt};
 use toasty::{Db, models};
 
 use crate::models::StoreObject;
-use crate::utils::StoreID;
+use crate::utils::{IntoPrimitive, StoreHash, StoreID};
 
 // TODO: CHANGE LATER
 const ETHER_DB_PATH : &str = "sqlite:/ether/state.db";
@@ -24,6 +26,18 @@ impl EtherDatabase {
     let db = get_db().await?;
     Ok(Self { db })
   }
+
+  async fn resopt_map<E : Error + 'static, P, M>(&mut self,
+                                                 x : Result<Option<M>, E>)
+                                                 -> ResOpt<P>
+    where M : IntoPrimitive<P = P>,
+  {
+    let x = x?;
+    Ok(match x {
+      | None => None,
+      | Some(x_i) => Some(x_i.into_primitive(&mut self.db).await?),
+    })
+  }
 }
 
 impl MetadataBackend for EtherDatabase {
@@ -34,15 +48,19 @@ impl MetadataBackend for EtherDatabase {
     // metadata-backend data without some sort of
     // migration
     let db_id : StoreID = id.try_into()?;
-    // FIXME: handle none case later
-    let db_obj = StoreObject::get_by_id(&mut self.db, db_id).await?;
-
-    Ok(Some(db_obj.into()))
+    let res = StoreObject::filter_by_id(db_id).first()
+                                              .exec(&mut self.db)
+                                              .await;
+    self.resopt_map(res).await
   }
 
   async fn get_obj_by_hash(&mut self,
                            hash : ether_common::StoreHash)
                            -> ResOpt<ether_common::StoreObject> {
-    todo!()
+    let hash_conv : StoreHash = hash.into();
+    let res = StoreObject::filter_by_hash(hash_conv).first()
+                                                    .exec(&mut self.db)
+                                                    .await;
+    self.resopt_map(res).await
   }
 }

@@ -1,18 +1,18 @@
-use std::str::FromStr;
-
 use derive_more::From;
-use ether_common::EtherError;
+use ether_common::{EtherError, Res};
+use toasty::Db;
 
-pub(crate) trait IntoPrimitive<P> {
-  async fn into_primitive()
+pub(crate) trait IntoPrimitive {
+  type P;
+  async fn into_primitive(self, db : &mut Db) -> Res<Self::P>;
 }
 
 pub(crate) type UUID = uuid::Uuid;
 
-#[derive(Debug, PartialEq, Eq, Hash, From, toasty::Embed)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]
 pub struct StoreID(UUID);
 
-#[derive(Debug, PartialEq, Eq, Hash, From, toasty::Embed)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]
 pub struct StoreHash(String);
 
 impl From<StoreID> for ether_common::StoreID {
@@ -37,7 +37,8 @@ impl TryFrom<ether_common::StoreID> for StoreID {
 
 impl From<ether_common::StoreHash> for StoreHash {
   fn from(value : ether_common::StoreHash) -> Self {
-    value.into()
+    let inner_val : String = value.into();
+    inner_val.into()
   }
 }
 
