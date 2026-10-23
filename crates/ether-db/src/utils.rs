@@ -1,4 +1,11 @@
+use std::str::FromStr;
+
 use derive_more::From;
+use ether_common::EtherError;
+
+pub(crate) trait IntoPrimitive<P> {
+  async fn into_primitive()
+}
 
 pub(crate) type UUID = uuid::Uuid;
 
@@ -17,6 +24,20 @@ impl From<StoreID> for ether_common::StoreID {
 impl From<StoreHash> for ether_common::StoreHash {
   fn from(value : StoreHash) -> ether_common::StoreHash {
     value.0.into()
+  }
+}
+
+impl TryFrom<ether_common::StoreID> for StoreID {
+  type Error = EtherError;
+  fn try_from(value : ether_common::StoreID) -> Result<Self, Self::Error> {
+    let inner_val : String = value.into();
+    Ok(UUID::try_parse(&inner_val)?.into())
+  }
+}
+
+impl From<ether_common::StoreHash> for StoreHash {
+  fn from(value : ether_common::StoreHash) -> Self {
+    value.into()
   }
 }
 

@@ -39,6 +39,7 @@ impl From<HashError> for StoreError {
 impl Store {
   pub async fn new(dir : PathBuf) -> Result<Self, EtherError> {
     let db = EtherDatabase::new().await?;
+    fs::create_dir_all(&dir)?;
     Ok(Store { root_path : dir,
                hash : HashAlgo::BLAKE3,
                db })

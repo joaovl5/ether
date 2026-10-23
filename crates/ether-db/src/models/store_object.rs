@@ -6,15 +6,30 @@ use crate::utils::{StoreHash, StoreID};
 pub struct StoreObject {
   #[key]
   #[auto]
-  id : StoreID,
+  pub id : StoreID,
 
-  hash : StoreHash,
+  pub hash : StoreHash,
 
   #[index]
-  comes_from_id : Option<StoreID>,
+  pub comes_from_id : Option<StoreID>,
   #[belongs_to(key = comes_from_id)]
-  comes_from : Deferred<Option<StoreObject>>,
+  pub comes_from : Deferred<Option<StoreObject>>,
 
   #[has_many(pair = comes_from)]
-  children : Deferred<Vec<StoreObject>>,
+  pub children : Deferred<Vec<StoreObject>>,
+}
+
+type P = ether_common::StoreObject;
+
+impl P {
+  fn from(value : StoreObject) -> Self {
+    // let obj = cmm::StoreObject { id : db_obj.id.into(),
+    //                              hash : db_obj.hash.into(),
+    //                              comes_from : None,
+    //                              children : Vec::new() };
+    P { id : value.id.into(),
+        hash : value.hash.into(),
+        comes_from : value.comes_from_id.map(|x| x.into()),
+        children : value.children }
+  }
 }

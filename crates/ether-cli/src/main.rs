@@ -1,13 +1,11 @@
 #![allow(dead_code, clippy::upper_case_acronyms)]
 
 use std::env::current_dir;
-use std::fs::create_dir_all;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueHint};
 use ether_common::EtherError;
 use ether_core::store::Store;
-use ether_db::setup_db;
 use human_panic::setup_panic;
 use time::macros::format_description;
 use tokio::main;
@@ -54,9 +52,7 @@ async fn main() -> Result<(), EtherError> {
   let args = CliArgs::parse();
   let cwd = current_dir().unwrap();
   let store_dir = cwd.join(args.store_path);
-  let mut store = Store::new(store_dir.clone());
-  create_dir_all(&store_dir).unwrap();
-  let _conn = setup_db().await?;
+  let mut store = Store::new(store_dir).await?;
   match args.command {
     | CliCommand::CopyPath { copy_from, } => {
       let x = store.copy_path(&copy_from).unwrap();
