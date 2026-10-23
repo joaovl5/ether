@@ -6,3 +6,6 @@ set positional-arguments
 run *args:
   RUST_LOG=trace cargo run "$@"
 
+db-cli *args:
+  RUST_LOG=trace cargo run --bin ether-db-cli -- "$@"
+

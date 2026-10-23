@@ -5,19 +5,18 @@ use std::fs::create_dir_all;
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueHint};
+use ether_common::EtherError;
+use ether_core::store::Store;
+use ether_db::setup_db;
 use human_panic::setup_panic;
 use time::macros::format_description;
 use tokio::main;
 use tracing::info;
 
-use self::core::store::Store;
-use self::db::setup_db;
-use self::utils::EtherError;
-
-mod config;
-mod core;
-mod db;
-mod utils;
+// mod config;
+// mod core;
+// mod db;
+// mod utils;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

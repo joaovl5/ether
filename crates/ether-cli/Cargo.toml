@@ -1,0 +1,19 @@
+[package]
+  name              = "ether-cli"
+  version           = "0.1.0"
+  edition.workspace = true
+
+[[bin]]
+  name = "ether"
+  path = "src/main.rs"
+
+[dependencies]
+  ether-core.workspace   = true
+  ether-common.workspace = true
+
+  clap.workspace               = true
+  tokio.workspace              = true
+  human-panic.workspace        = true
+  tracing.workspace            = true
+  tracing-subscriber.workspace = true
+  time.workspace               = true

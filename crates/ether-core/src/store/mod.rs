@@ -1,21 +1,13 @@
+mod store_impl;
+
 use std::collections::HashMap;
 
+pub use self::store_impl::*;
 use super::hash;
 use super::url::URL;
 
-mod store_impl;
-
-pub use store_impl::*;
-
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct StoreId(String);
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct StoreObject {
-  id : StoreId,
-  comes_from : Option<StoreId>,
-  references : Vec<StoreId>,
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Drv {

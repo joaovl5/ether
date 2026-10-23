@@ -1,13 +1,18 @@
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
-use super::Drv;
-use crate::core::hash::{HashAlgo, HashError};
+use ether_common::EtherError;
+use ether_db::EtherDatabase;
 
-#[derive(Debug, PartialEq, Eq)]
+use super::Drv;
+use crate::hash::{HashAlgo, HashError};
+
+#[derive(Debug)]
 pub struct Store {
-  root_path : PathBuf,
-  hash : HashAlgo,
+  pub root_path : PathBuf,
+  pub hash : HashAlgo,
+
+  db : EtherDatabase,
 }
 
 #[derive(Debug)]
@@ -32,9 +37,11 @@ impl From<HashError> for StoreError {
 }
 
 impl Store {
-  pub fn new(dir : PathBuf) -> Self {
-    Store { root_path : dir,
-            hash : HashAlgo::BLAKE3 }
+  pub async fn new(dir : PathBuf) -> Result<Self, EtherError> {
+    let db = EtherDatabase::new().await?;
+    Ok(Store { root_path : dir,
+               hash : HashAlgo::BLAKE3,
+               db })
   }
 
   pub fn copy_path(&mut self, path : &Path) -> Result<PathBuf, StoreError> {

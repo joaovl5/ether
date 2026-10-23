@@ -5,8 +5,6 @@
     bacon
     rust-analyzer
 
-    sea-orm-cli
-
     just
   ];
 }

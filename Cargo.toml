@@ -1,56 +1,61 @@
-[package]
-  name    = "ether"
-  version = "0.1.0"
-  edition = "2024"
-
 [profile.dev]
   opt-level   = 1
   incremental = true
 
-  # [profile.dev.packages."*"]
-  #   opt-level = 3
+[workspace]
+  members  = ["crates/*"]
+  resolver = "3"
 
-[dependencies]
-  serde = { version = "1.0", features = [
-    "derive",
-  ] }
-  blake3 = { version = "1.8.7", features = [
-    "mmap",
-    "rayon",
-  ] }
-  clap = { version = "4.6.7", features = [
-    "derive",
-    "cargo",
-    "env",
-    "unicode",
-    "wrap_help",
-    "string",
-  ] }
-  human-panic = { version = "2.0.8" }
-  tracing = { version = "0.1" }
-  tracing-subscriber = { version = "0.3", features = [
-    "tracing-log",
-    "time",
-    "local-time",
-    "env-filter",
-  ] }
-  time = { version = "0.3.55", features = [
-    "formatting",
-    "local-offset",
-    "macros",
-  ] }
-  sea-orm = { version = "2.0.0", features = [
-    "sqlx-sqlite",
-    "runtime-tokio",
-    "macros",
-    "with-time",
-    "with-json",
-    "schema-sync",
-    "entity-registry",
-  ] }
-  tokio = { version = "1.54.1", features = [
-    # can tweak later to make fine-grained
-    "full",
-    "tracing",
-    "io-uring",
-  ] }
+  [workspace.package]
+    edition = "2024"
+
+  [workspace.profile.dev]
+    opt-level   = 1
+    incremental = true
+
+  [workspace.dependencies]
+    ether-core   = { version = "0.1.0", path = "./crates/ether-core" }
+    ether-db     = { version = "0.1.0", path = "./crates/ether-db" }
+    ether-common = { version = "0.1.0", path = "./crates/ether-common" }
+
+    serde = { version = "1.0", features = [
+      "derive",
+    ] }
+    blake3 = { version = "1.8.7", features = [
+      "mmap",
+      "rayon",
+    ] }
+    clap = { version = "4.6.7", features = [
+      "derive",
+      "cargo",
+      "env",
+      "unicode",
+      "wrap_help",
+      "string",
+    ] }
+    human-panic = { version = "2.0.8" }
+    tracing = { version = "0.1" }
+    tracing-subscriber = { version = "0.3", features = [
+      "tracing-log",
+      "time",
+      "local-time",
+      "env-filter",
+    ] }
+    time = { version = "0.3.55", features = [
+      "formatting",
+      "local-offset",
+      "macros",
+    ] }
+    toasty = { version = "0.11", features = [
+      "sqlite",
+    ] }
+    toasty-cli = { version = "0.11" }
+    tokio = { version = "1.54.1", features = [
+      # can tweak later to make fine-grained
+      "full",
+      "tracing",
+      "io-uring",
+    ] }
+    uuid = { version = "1.28.0" }
+    derive_more = { version = "2.1.1", features = ["full"] }
+    anyhow = { version = "1.0.104" }

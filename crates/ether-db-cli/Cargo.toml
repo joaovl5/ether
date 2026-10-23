@@ -1,0 +1,17 @@
+[package]
+  name              = "ether-db-cli"
+  version           = "0.1.0"
+  edition.workspace = true
+
+[[bin]]
+  name = "ether-db-cli"
+  path = "src/main.rs"
+
+[dependencies]
+  ether-db.workspace     = true
+  ether-common.workspace = true
+
+  toasty.workspace     = true
+  toasty-cli.workspace = true
+  tokio.workspace      = true
+  anyhow.workspace     = true
