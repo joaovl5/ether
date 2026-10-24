@@ -55,3 +55,4 @@
     uuid = { version = "1.28.0" }
     derive_more = { version = "2.1.1", features = ["full"] }
     anyhow = { version = "1.0.104" }
+    itertools = { version = "0.15.0" }

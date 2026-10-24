@@ -4,7 +4,7 @@ use ether_common::{EtherError, MetadataBackend, Res, ResOpt};
 use toasty::{Db, models};
 
 use crate::models::StoreObject;
-use crate::utils::{FromPrimitive, IntoPrimitive, StoreHash, StoreID, UUID};
+use crate::utils::{FromPrimitive, IntoPrimitive, StoreHash};
 
 // TODO: CHANGE LATER
 const ETHER_DB_PATH : &str = "sqlite:/ether/state.db";
@@ -42,28 +42,10 @@ impl EtherDatabase {
 impl MetadataBackend for EtherDatabase {
   type StoreObjectT = StoreObject;
 
-  fn mk_id(&self) -> ether_common::StoreID {
-    let x : StoreID = UUID::now_v7().into();
-    x.into()
-  }
-
   async fn mk_obj(&mut self,
                   prim : ether_common::StoreObject)
                   -> Res<StoreObject> {
     StoreObject::from_primitive(&mut self.db, prim).await
-  }
-
-  async fn get_obj_by_id(&mut self,
-                         id : ether_common::StoreID)
-                         -> ResOpt<ether_common::StoreObject> {
-    // this means its incompatible w. old dbs or other
-    // metadata-backend data without some sort of
-    // migration
-    let db_id : StoreID = id.try_into()?;
-    let res = StoreObject::filter_by_id(db_id).first()
-                                              .exec(&mut self.db)
-                                              .await;
-    self.resopt_map(res).await
   }
 
   async fn get_obj_by_hash(&mut self,

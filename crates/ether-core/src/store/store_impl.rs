@@ -33,8 +33,7 @@ impl Store {
     let contents_hash = self.hash.make_path(path)?;
     let store_path = self.make_store_path(contents_hash.clone())?;
     self.copy_into(path, &store_path)?;
-    let obj = StoreObject { id : self.backend.mk_id(),
-                            hash : contents_hash.into(),
+    let obj = StoreObject { hash : contents_hash.into(),
                             comes_from : None };
     self.backend.mk_obj(obj).await?;
     Ok(store_path)
