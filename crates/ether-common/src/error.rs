@@ -2,6 +2,7 @@ use std::error::Error;
 
 #[derive(Debug)]
 pub enum EtherError {
+  BadPath,
   Other(Box<dyn Error>),
 }
 

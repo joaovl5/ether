@@ -1,50 +1,27 @@
-use std::path::{Path, StripPrefixError};
+use std::path::Path;
+
+use ether_common::{EtherError, Res};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum HashAlgo {
   BLAKE3,
 }
 
-#[derive(Debug)]
-pub enum HashError {
-  FileMissing,
-  PermissionDenied,
-  BadPath,
-  UnexpectedIOError(Box<std::io::Error>),
-}
-
-impl From<std::io::Error> for HashError {
-  fn from(value : std::io::Error) -> Self {
-    use std::io::ErrorKind::*;
-    match value.kind() {
-      | NotFound => Self::FileMissing,
-      | PermissionDenied => Self::PermissionDenied,
-      | _ => Self::UnexpectedIOError(Box::new(value)),
-    }
-  }
-}
-
-impl From<StripPrefixError> for HashError {
-  fn from(_value : StripPrefixError) -> Self {
-    Self::BadPath
-  }
-}
-
 impl HashAlgo {
-  pub fn make_path(&self, path : &Path) -> Result<String, HashError> {
+  pub fn make_path(&self, path : &Path) -> Res<String> {
     match self {
       | HashAlgo::BLAKE3 => self.blake3_make_path(path),
     }
   }
 
-  fn get_file_name<'a>(&self, path : &'a Path) -> Result<&'a str, HashError> {
+  fn get_file_name<'a>(&self, path : &'a Path) -> Res<&'a str> {
     let file_name = path.file_name()
                         .and_then(|x| x.to_str())
-                        .ok_or(HashError::BadPath)?;
+                        .ok_or(EtherError::BadPath)?;
     Ok(file_name)
   }
 
-  fn blake3_make_path(&self, path : &Path) -> Result<String, HashError> {
+  fn blake3_make_path(&self, path : &Path) -> Res<String> {
     let mut hasher = blake3::Hasher::new();
     self.blake3_handle_hash(path, &mut hasher)?;
     let hash = hasher.finalize();
@@ -54,7 +31,7 @@ impl HashAlgo {
   fn blake3_handle_hash(&self,
                         path : &Path,
                         hasher : &mut blake3::Hasher)
-                        -> Result<(), HashError> {
+                        -> Res<()> {
     let file_name = self.get_file_name(path)?;
 
     if path.is_dir() {

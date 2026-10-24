@@ -9,10 +9,6 @@
   [workspace.package]
     edition = "2024"
 
-  [workspace.profile.dev]
-    opt-level   = 1
-    incremental = true
-
   [workspace.dependencies]
     ether-core   = { version = "0.1.0", path = "./crates/ether-core" }
     ether-db     = { version = "0.1.0", path = "./crates/ether-db" }

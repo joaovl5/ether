@@ -5,4 +5,6 @@ CREATE TABLE "store_objects" (
     PRIMARY KEY ("id")
 );
 -- #[toasty::breakpoint]
+CREATE INDEX "index_store_objects_by_hash" ON "store_objects" ("hash");
+-- #[toasty::breakpoint]
 CREATE INDEX "index_store_objects_by_comes_from_id" ON "store_objects" ("comes_from_id");

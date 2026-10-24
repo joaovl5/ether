@@ -55,7 +55,7 @@ async fn main() -> Result<(), EtherError> {
   let mut store = Store::new(store_dir).await?;
   match args.command {
     | CliCommand::CopyPath { copy_from, } => {
-      let x = store.copy_path(&copy_from).unwrap();
+      let x = store.copy_path(&copy_from).await?;
       info!("Copied to {:?}", x.to_string_lossy())
     },
   }

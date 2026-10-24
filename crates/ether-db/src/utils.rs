@@ -7,6 +7,11 @@ pub(crate) trait IntoPrimitive {
   async fn into_primitive(self, db : &mut Db) -> Res<Self::P>;
 }
 
+pub(crate) trait FromPrimitive: Sized {
+  type P;
+  async fn from_primitive(db : &mut Db, prim : Self::P) -> Res<Self>;
+}
+
 pub(crate) type UUID = uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]

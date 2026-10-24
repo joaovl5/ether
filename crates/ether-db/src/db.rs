@@ -1,10 +1,10 @@
 use std::error::Error;
 
-use ether_common::{self as cmm, EtherError, MetadataBackend, Res, ResOpt};
+use ether_common::{EtherError, MetadataBackend, Res, ResOpt};
 use toasty::{Db, models};
 
 use crate::models::StoreObject;
-use crate::utils::{IntoPrimitive, StoreHash, StoreID};
+use crate::utils::{FromPrimitive, IntoPrimitive, StoreHash, StoreID, UUID};
 
 // TODO: CHANGE LATER
 const ETHER_DB_PATH : &str = "sqlite:/ether/state.db";
@@ -40,8 +40,17 @@ impl EtherDatabase {
 }
 
 impl MetadataBackend for EtherDatabase {
-  async fn mk_obj(&mut self, obj : ether_common::StoreObject) -> Res<()> {
-    todo!()
+  type StoreObjectT = StoreObject;
+
+  fn mk_id(&self) -> ether_common::StoreID {
+    let x : StoreID = UUID::now_v7().into();
+    x.into()
+  }
+
+  async fn mk_obj(&mut self,
+                  prim : ether_common::StoreObject)
+                  -> Res<StoreObject> {
+    StoreObject::from_primitive(&mut self.db, prim).await
   }
 
   async fn get_obj_by_id(&mut self,

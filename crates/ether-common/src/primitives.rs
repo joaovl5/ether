@@ -11,5 +11,4 @@ pub struct StoreObject {
   pub id : StoreID,
   pub hash : StoreHash,
   pub comes_from : Option<StoreID>,
-  pub children : Vec<StoreID>,
 }
