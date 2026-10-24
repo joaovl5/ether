@@ -32,13 +32,3 @@ impl From<ether_common::StoreHash> for StoreHash {
     inner_val.into()
   }
 }
-
-// impl<X : Ord, Y> Ord for Result<X, Y> {
-//   fn cmp(&self, other : &Self) -> Ordering {
-//     match (self, other) {
-//       | (Err(_), Err(_)) => Ordering::Equal,
-//       | _ => todo!(),
-//     };
-//     todo!()
-//   }
-// }

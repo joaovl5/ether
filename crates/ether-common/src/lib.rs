@@ -1,4 +1,4 @@
-#![allow(async_fn_in_trait)]
+#![allow(async_fn_in_trait, nonstandard_style)]
 mod error;
 mod hashing;
 mod metadata;

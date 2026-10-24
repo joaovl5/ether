@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use derive_more::{From, Into};
+use derive_more::{Display, From, Into};
 
-#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
 pub struct StoreHash(String);
 
 /// Any sort of hash that is *not* addressing a store object necessarily.
-#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
 pub struct GenericHash(String);
 
 #[derive(Debug, PartialEq, Eq)]
@@ -16,16 +16,16 @@ pub struct StoreObject {
   pub comes_from : Option<StoreHash>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, From, Into)]
+#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
 pub struct RecipeInputName(String);
 
-#[derive(Debug, PartialEq, Eq, Hash, From, Into)]
+#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
 pub struct RecipeOutputName(String);
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Recipe {
-  /// Optionally tie recipe to a single system type.
-  pub system : Option<System>,
+  /// Optionally tie recipe to a single platform type.
+  pub platform : Option<Platform>,
   /// What builder to use, and how.
   pub builder : RecipeBuilder,
   /// What will be exposed as outputs to the builder.
@@ -44,12 +44,21 @@ pub struct Recipe {
   /// values, and will get mapped to envvars like `ETHER_INPUT_SRC`, where
   /// `SRC` would be the name of an input. As with outputs, they're all
   /// upper-cased and thus are case-insensitive.
-  pub inputs : HashMap<RecipeInputName, StoreHash>,
+  pub inputs : HashMap<RecipeInputName, RecipeInput>,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum RecipeInput {
+  Hash(StoreHash),
+  RecipeOutput {
+    recipe_hash : StoreHash,
+    output : RecipeOutputName,
+  },
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum RecipeBuilder {
-  /// Fetch from some URL in output-addressed fashion.
+  /// Fetch from some URL with some expected hash.
   FetchURL {
     url : String,
     expected_hash : GenericHash,
@@ -80,17 +89,8 @@ pub struct ExecutableArgs {
   pub env : HashMap<String, String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum System {
-  X86_64,
-  Arm64,
-}
-
-impl From<&System> for &str {
-  fn from(value : &System) -> Self {
-    match value {
-      | System::X86_64 => "X86_64",
-      | System::Arm64 => "Arm64",
-    }
-  }
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Display)]
+pub enum Platform {
+  x86_64_linux,
+  aarch64_linux,
 }
