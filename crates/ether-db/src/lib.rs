@@ -1,4 +1,4 @@
-#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::upper_case_acronyms, clippy::wrong_self_convention)]
 
 pub mod db;
 pub mod models;

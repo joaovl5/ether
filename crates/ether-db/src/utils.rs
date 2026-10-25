@@ -14,8 +14,16 @@ pub(crate) trait FromPrimitive: Sized {
 
 pub(crate) type UUID = uuid::Uuid;
 
+// Duplicate type from `ether_common` due to `toasty::Embed` derive call
 #[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]
 pub struct StoreID(UUID);
+
+// Duplicate type from `ether_common` due to `toasty::Embed` derive call
+#[derive(Debug, PartialEq, Eq, toasty::Embed)]
+pub enum StoreRefType {
+  /// `lhs` produces `rhs`.
+  Produces,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]
 pub struct StoreHash(String);

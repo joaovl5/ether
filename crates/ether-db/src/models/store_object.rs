@@ -1,7 +1,8 @@
 use ether_common::Res;
 use toasty::{Db, Deferred, Model};
 
-use crate::utils::{FromPrimitive, IntoPrimitive, StoreHash, StoreID};
+use crate::utils::{FromPrimitive, IntoPrimitive, StoreHash, StoreID,
+                   StoreRefType};
 
 #[derive(Debug, Model)]
 pub struct StoreObject {
@@ -11,22 +12,33 @@ pub struct StoreObject {
 
   #[index]
   pub hash : StoreHash,
+  // #[has_many(pair = comes_from)]
+  // pub children : Deferred<Vec<StoreObject>>,
+}
+
+#[derive(Debug, Model)]
+#[key(lhs_id, rhs_id)]
+pub struct StoreObjectRefs {
+  #[index]
+  pub lhs_id : StoreID,
 
   #[index]
-  pub comes_from_id : Option<StoreID>,
-  #[belongs_to(key = comes_from_id)]
-  pub comes_from : Deferred<Option<StoreObject>>,
+  pub rhs_id : StoreID,
 
-  #[has_many(pair = comes_from)]
-  pub children : Deferred<Vec<StoreObject>>,
+  #[belongs_to(key = lhs_id, references = id)]
+  pub lhs : Deferred<StoreObject>,
+
+  #[belongs_to(key = rhs_id, references = id)]
+  pub rhs : Deferred<StoreObject>,
+
+  #[index]
+  pub ref_type : StoreRefType,
 }
 
 impl IntoPrimitive for StoreObject {
   type P = ether_common::StoreObject;
-  async fn into_primitive(self, db : &mut Db) -> Res<Self::P> {
-    let comes_from = self.comes_from().exec(db).await?.map(|x| x.hash.into());
-    Ok(Self::P { hash : self.hash.clone().into(),
-                 comes_from })
+  async fn into_primitive(self, _db : &mut Db) -> Res<Self::P> {
+    Ok(Self::P { hash : self.hash.clone().into() })
   }
 }
 
@@ -35,18 +47,8 @@ impl FromPrimitive for StoreObject {
   async fn from_primitive(db : &mut Db, prim : Self::P) -> Res<Self> {
     let obj = Self::create();
     let obj_hash : StoreHash = prim.hash.into();
-    let obj_comes_from_id : Option<StoreID> = match prim.comes_from {
-      | None => None,
-      | Some(x) => {
-        let hash : StoreHash = x.into();
-        Some(Self::get_by_hash(db, hash).await?.id)
-      },
-    };
 
-    let obj = obj.hash(obj_hash)
-                 .comes_from_id(obj_comes_from_id)
-                 .exec(db)
-                 .await?;
+    let obj = obj.hash(obj_hash).exec(db).await?;
     Ok(obj)
   }
 }

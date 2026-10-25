@@ -13,7 +13,12 @@ pub struct GenericHash(String);
 #[derive(Debug, PartialEq, Eq)]
 pub struct StoreObject {
   pub hash : StoreHash,
-  pub comes_from : Option<StoreHash>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum StoreRefType {
+  /// `lhs` produces `rhs`
+  Produces,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]

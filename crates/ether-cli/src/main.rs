@@ -56,7 +56,7 @@ async fn main() -> Result<(), EtherError> {
   match args.command {
     | CliCommand::CopyPath { copy_from, } => {
       let x = store.copy_path(&copy_from).await?;
-      info!("Copied to {:?}", x.to_string_lossy())
+      info!("Copied at {:?}", x.to_string_lossy())
     },
   }
 

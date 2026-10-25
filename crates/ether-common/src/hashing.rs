@@ -6,7 +6,7 @@ use crate::{ExecutableArgs, GenericHash, Recipe, RecipeBuilder, RecipeInput,
             Res, cmp_res, get_file_name};
 
 /// Builder for a hash.
-pub trait HashBuilder: Sized {
+pub trait Hasher: Sized {
   /// Recursively goes into a path and hashes its contents.
   fn with_path(&mut self, value : &Path) -> Res<&mut Self>;
 
@@ -27,12 +27,12 @@ fn len_prefix(x : impl Into<String>) -> String {
 }
 
 pub trait EtherHashable: Sized {
-  fn get_ether_hash<'a, T : HashBuilder>(&self,
-                                         builder : &'a mut T)
-                                         -> Res<&'a mut T>;
+  fn get_ether_hash<'a, T : Hasher>(&self,
+                                    builder : &'a mut T)
+                                    -> Res<&'a mut T>;
 }
 
-impl HashBuilder for blake3::Hasher {
+impl Hasher for blake3::Hasher {
   fn with_path(&mut self, value : &Path) -> Res<&mut Self> {
     let tail = get_file_name(value)?;
     if !value.is_dir() {
@@ -64,20 +64,23 @@ impl HashBuilder for blake3::Hasher {
   }
 }
 
+pub trait HasherFactory {
+  type HasherT: Hasher;
+  fn make(&self) -> Res<Self::HasherT>;
+}
+
 impl<X> EtherHashable for X where X : Into<String> + Clone,
 {
-  fn get_ether_hash<'a, T : HashBuilder>(&self,
-                                         builder : &'a mut T)
-                                         -> Res<&'a mut T> {
+  fn get_ether_hash<'a, T : Hasher>(&self,
+                                    builder : &'a mut T)
+                                    -> Res<&'a mut T> {
     let hash : String = self.clone().into();
     builder.with_str(&len_prefix(&hash))
   }
 }
 
 impl EtherHashable for ExecutableArgs {
-  fn get_ether_hash<'a, T : HashBuilder>(&self,
-                                         b : &'a mut T)
-                                         -> Res<&'a mut T> {
+  fn get_ether_hash<'a, T : Hasher>(&self, b : &'a mut T) -> Res<&'a mut T> {
     b.with_str("<executable-args>")?
      .with_str(&format!("<path to='{}'/>",
                         self.path
@@ -105,9 +108,7 @@ impl EtherHashable for ExecutableArgs {
 }
 
 impl EtherHashable for RecipeBuilder {
-  fn get_ether_hash<'a, T : HashBuilder>(&self,
-                                         b : &'a mut T)
-                                         -> Res<&'a mut T> {
+  fn get_ether_hash<'a, T : Hasher>(&self, b : &'a mut T) -> Res<&'a mut T> {
     b.with_str("<recipe-builder>")?;
     use RecipeBuilder::*;
     match self {
@@ -137,9 +138,7 @@ impl EtherHashable for RecipeBuilder {
 }
 
 impl EtherHashable for Recipe {
-  fn get_ether_hash<'a, T : HashBuilder>(&self,
-                                         b : &'a mut T)
-                                         -> Res<&'a mut T> {
+  fn get_ether_hash<'a, T : Hasher>(&self, b : &'a mut T) -> Res<&'a mut T> {
     b.with_str("<recipe>")?
      .with_str("<system>")?
      .with_str(&self.platform.map(|x| x.to_string()).unwrap_or_default())?
