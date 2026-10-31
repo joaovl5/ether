@@ -1,10 +1,11 @@
 use std::error::Error;
 
-use ether_common::{EtherError, MetadataBackend, Res, ResOpt};
+use ether_common::{EtherError, MetadataBackend, Res, ResOpt, StoreHash,
+                   StoreObject, StoreRefType};
 use toasty::{Db, models};
 
-use crate::models::StoreObject;
-use crate::utils::{FromPrimitive, IntoPrimitive, StoreHash};
+use crate::models::DbStoreObject;
+use crate::utils::{DbStoreHash, FromPrimitive, IntoPrimitive};
 
 // TODO: CHANGE LATER
 const ETHER_DB_PATH : &str = "sqlite:/ether/state.db";
@@ -26,10 +27,9 @@ impl EtherDatabase {
     Ok(Self { db })
   }
 
-  async fn resopt_map<E : Error + 'static, P, M>(&mut self,
-                                                 x : Result<Option<M>, E>)
-                                                 -> ResOpt<P>
-    where M : IntoPrimitive<P = P>,
+  async fn resopt_map<E, P, M>(&mut self, x : Result<Option<M>, E>) -> ResOpt<P>
+    where E : Error + 'static,
+          M : IntoPrimitive<P = P>,
   {
     let x = x?;
     Ok(match x {
@@ -40,33 +40,29 @@ impl EtherDatabase {
 }
 
 impl MetadataBackend for EtherDatabase {
-  type StoreObjectT = StoreObject;
+  type StoreObjectT = DbStoreObject;
 
-  async fn mk(&mut self, prim : ether_common::StoreObject) -> Res<StoreObject> {
-    StoreObject::from_primitive(&mut self.db, prim).await
+  async fn mk(&mut self, prim : StoreObject) -> Res<DbStoreObject> {
+    DbStoreObject::from_primitive(&mut self.db, prim).await
   }
 
-  async fn get_by_hash(&mut self,
-                       hash : ether_common::StoreHash)
-                       -> ResOpt<ether_common::StoreObject> {
-    let hash_conv : StoreHash = hash.into();
-    let res = StoreObject::filter_by_hash(hash_conv).first()
-                                                    .exec(&mut self.db)
-                                                    .await;
+  async fn get_by_hash(&mut self, hash : StoreHash) -> ResOpt<StoreObject> {
+    let hash_conv : DbStoreHash = hash.into();
+    let res = DbStoreObject::filter_by_hash(hash_conv).first()
+                                                      .exec(&mut self.db)
+                                                      .await;
     self.resopt_map(res).await
   }
 
-  async fn get_lhs_refs(
-    &mut self,
-    _hash : ether_common::StoreHash)
-    -> Vec<(ether_common::StoreHash, ether_common::StoreRefType)> {
+  async fn get_lhs_refs(&mut self,
+                        _hash : StoreHash)
+                        -> Vec<(StoreHash, StoreRefType)> {
     todo!()
   }
 
-  async fn get_rhs_refs(
-    &mut self,
-    _hash : ether_common::StoreHash)
-    -> Vec<(ether_common::StoreHash, ether_common::StoreRefType)> {
+  async fn get_rhs_refs(&mut self,
+                        _hash : StoreHash)
+                        -> Vec<(StoreHash, StoreRefType)> {
     todo!()
   }
 }

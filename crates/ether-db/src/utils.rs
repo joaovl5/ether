@@ -1,5 +1,5 @@
 use derive_more::From;
-use ether_common::Res;
+use ether_common::{Res, StoreHash};
 use toasty::Db;
 
 pub(crate) trait IntoPrimitive {
@@ -14,28 +14,27 @@ pub(crate) trait FromPrimitive: Sized {
 
 pub(crate) type UUID = uuid::Uuid;
 
-// Duplicate type from `ether_common` due to `toasty::Embed` derive call
 #[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]
-pub struct StoreID(UUID);
+pub struct DbID(UUID);
 
 // Duplicate type from `ether_common` due to `toasty::Embed` derive call
 #[derive(Debug, PartialEq, Eq, toasty::Embed)]
-pub enum StoreRefType {
+pub enum DbStoreRefType {
   /// `lhs` produces `rhs`.
   Produces,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, From, toasty::Embed)]
-pub struct StoreHash(String);
+pub struct DbStoreHash(String);
 
-impl From<StoreHash> for ether_common::StoreHash {
-  fn from(value : StoreHash) -> ether_common::StoreHash {
+impl From<DbStoreHash> for StoreHash {
+  fn from(value : DbStoreHash) -> StoreHash {
     value.0.into()
   }
 }
 
-impl From<ether_common::StoreHash> for StoreHash {
-  fn from(value : ether_common::StoreHash) -> Self {
+impl From<StoreHash> for DbStoreHash {
+  fn from(value : StoreHash) -> Self {
     let inner_val : String = value.into();
     inner_val.into()
   }

@@ -2,32 +2,92 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use derive_more::{Display, From, Into};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
+#[derive(Debug,
+           PartialEq,
+           Eq,
+           Hash,
+           From,
+           Into,
+           Clone,
+           PartialOrd,
+           Ord,
+           Deserialize,
+           Serialize)]
 pub struct StoreHash(String);
 
 /// Any sort of hash that is *not* addressing a store object necessarily.
-#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
+#[derive(Debug,
+           PartialEq,
+           Eq,
+           Hash,
+           From,
+           Into,
+           Clone,
+           PartialOrd,
+           Ord,
+           Deserialize,
+           Serialize)]
 pub struct GenericHash(String);
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StoreObject {
   pub hash : StoreHash,
+  pub value : StoreObjectValue,
+}
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StoreObjectValue {
+  FileLike(FileLike),
+  Recipe(Box<Recipe>),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FileLike {
+  pub original_location : Option<PathBuf>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StoreObjectType {
+  /// File or directory
+  FileLike,
+  /// Recipe
+  Recipe,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum StoreRefType {
   /// `lhs` produces `rhs`
   Produces,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
+#[derive(Debug,
+           PartialEq,
+           Eq,
+           Hash,
+           From,
+           Into,
+           Clone,
+           PartialOrd,
+           Ord,
+           Serialize,
+           Deserialize)]
 pub struct RecipeInputName(String);
 
-#[derive(Debug, PartialEq, Eq, Hash, From, Into, Clone, PartialOrd, Ord)]
+#[derive(Debug,
+           PartialEq,
+           Eq,
+           Hash,
+           From,
+           Into,
+           Clone,
+           PartialOrd,
+           Ord,
+           Serialize,
+           Deserialize)]
 pub struct RecipeOutputName(String);
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Recipe {
   /// Optionally tie recipe to a single platform type.
   pub platform : Option<Platform>,
@@ -52,7 +112,7 @@ pub struct Recipe {
   pub inputs : HashMap<RecipeInputName, RecipeInput>,
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub enum RecipeInput {
   Hash(StoreHash),
   RecipeOutput {
@@ -61,7 +121,7 @@ pub enum RecipeInput {
   },
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RecipeBuilder {
   /// Fetch from some URL with some expected hash.
   FetchURL {
@@ -83,7 +143,7 @@ pub enum RecipeBuilder {
 }
 
 /// Arguments for an executable builder.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExecutableArgs {
   /// Path relative to the store location. If store location is itself
   /// an executable and not a folder, this should be `None`.
@@ -94,7 +154,7 @@ pub struct ExecutableArgs {
   pub env : HashMap<String, String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Display)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Display, Deserialize, Serialize)]
 pub enum Platform {
   x86_64_linux,
   aarch64_linux,

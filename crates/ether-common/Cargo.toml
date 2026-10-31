@@ -8,3 +8,4 @@
   derive_more.workspace = true
   blake3.workspace      = true
   itertools.workspace   = true
+  serde.workspace       = true

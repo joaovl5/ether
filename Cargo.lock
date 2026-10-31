@@ -645,6 +645,7 @@ dependencies = [
  "blake3",
  "derive_more",
  "itertools",
+ "serde",
 ]
 
 [[package]]
@@ -655,6 +656,7 @@ dependencies = [
  "ether-common",
  "ether-db",
  "serde",
+ "serde_json",
  "tokio",
  "tracing",
 ]
@@ -2080,6 +2082,8 @@ dependencies = [
  "indexmap",
  "inventory",
  "serde",
+ "serde_core",
+ "serde_json",
  "toasty-core",
  "toasty-driver-mysql",
  "toasty-driver-sqlite",

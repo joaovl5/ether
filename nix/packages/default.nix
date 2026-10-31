@@ -1,19 +1,23 @@
 {pkgs, ...}: let
   src-path = ../../.;
-  project-name = cargo-toml.package.name;
   cargo-toml =
-    builtins.readFile "${src-path}/Cargo.toml"
+    src-path + "/crates/ether-cli/Cargo.toml"
+    |> builtins.readFile
     |> builtins.fromTOML;
+  project-name = cargo-toml.package.name;
+  src = pkgs.lib.fileset.toSource {
+    root = src-path;
+    fileset = pkgs.lib.fileset.gitTracked src-path;
+  };
 in rec {
   default = pkgs.rustPlatform.buildRustPackage {
     pname = project-name;
     version = cargo-toml.package.version;
-    src = src-path;
-    cargoLock.lockFile = "${src-path}/Cargo.lock";
+    inherit src;
+    cargoLock.lockFile = src-path + "/Cargo.lock";
   };
   ${project-name} = default;
 
   rust-toolchain =
-    pkgs.rust-bin.fromRustupToolchainFile
-    "${src-path}/rust-toolchain.toml";
+    pkgs.rust-bin.fromRustupToolchainFile (src-path + "/rust-toolchain.toml");
 }

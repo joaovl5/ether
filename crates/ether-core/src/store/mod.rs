@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
-use ether_common::{Hasher, HasherFactory, MetadataBackend, Res, StoreHash,
-                   StoreObject};
+use ether_common::{FileLike, GenericHash, Hasher, HasherFactory,
+                   MetadataBackend, Res, StoreHash, StoreObject,
+                   StoreObjectValue};
 use ether_db::EtherDatabase;
 use tracing::debug;
 
@@ -31,7 +32,10 @@ pub struct Store<Backend = EtherDatabase, HashFacT = Blake3Factory>
 #[derive(Debug)]
 pub struct StoreObjectData {}
 
-impl Store {
+impl<Backend, HashFacT> Store<Backend, HashFacT>
+  where Backend : MetadataBackend,
+        HashFacT : HasherFactory,
+{
   pub async fn new(dir : PathBuf) -> Res<Store<EtherDatabase>> {
     fs::create_dir_all(&dir)?;
     let backend = EtherDatabase::new().await?;
@@ -40,27 +44,38 @@ impl Store {
                backend })
   }
 
+  fn to_store_hash(&self, x : GenericHash) -> StoreHash {
+    Into::<String>::into(x).into()
+  }
+
   fn hash_path(&mut self, path : &Path) -> Res<StoreHash> {
-    Ok(Into::<String>::into(self.hasher_fac
-                                 .make()?
-                                 .with_path(path)?
-                                 .build()?).into())
+    Ok(self.to_store_hash(self.hasher_fac.make()?.with_path(path)?.build()?))
+  }
+
+  async fn hash_exists(&mut self, x : &StoreHash) -> Res<bool> {
+    self.backend
+        .get_by_hash(x.clone())
+        .await
+        .map(|r| r.is_some())
   }
 
   pub async fn copy_path(&mut self, path : &Path) -> Res<PathBuf> {
     let contents_hash = self.hash_path(path)?;
-    let store_path = self.make_store_path(contents_hash.clone())?;
-    if self.backend
-           .get_by_hash(contents_hash.clone())
-           .await?
-           .is_some()
-    {
+    let store_path = self.make_store_path(&contents_hash)?;
+
+    if self.hash_exists(&contents_hash).await? {
       debug!("Skipping copy since object is already in store");
-    } else {
-      self.copy_into(path, &store_path)?;
-      let obj = StoreObject { hash : contents_hash };
-      self.backend.mk(obj).await?;
+      return Ok(store_path);
     }
+
+    self.copy_into(path, &store_path)?;
+    let loc : PathBuf = path.into();
+    let value =
+      StoreObjectValue::FileLike(FileLike { original_location : Some(loc) });
+    let obj = StoreObject { hash : contents_hash,
+                            value };
+    self.backend.mk(obj).await?;
+
     Ok(store_path)
   }
 
@@ -88,8 +103,8 @@ impl Store {
     Ok(())
   }
 
-  pub fn make_store_path(&mut self, hash : StoreHash) -> Res<PathBuf> {
-    let hash : String = hash.into();
+  pub fn make_store_path(&mut self, hash : &StoreHash) -> Res<PathBuf> {
+    let hash : String = hash.clone().into();
     let out = self.root_path.join(hash);
     fs::create_dir_all(out.clone())?;
     Ok(out)
