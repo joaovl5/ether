@@ -18,6 +18,7 @@ impl Store {
     }
 
     let store_path = self.make_store_path(&recipe_hash)?;
+    store_path.into_string();
     // TODO:
     // - serialize json as str, or straight to IO writer (preferrable)
     // - save store object
